@@ -1,0 +1,99 @@
+<project name="test-ant-builds" default="all" basedir=".">
+
+	<description>
+     Demonstrate the use of the Ant build tool with a simple Java project.
+   </description>
+
+	<!-- 
+    First define properties, datatypes, and default tasks; then define targets.
+    Any Ant tasks placed outside of any target are always executed first.
+   -->
+
+	<!-- Override default property values with an external properties file, if present. -->
+	<property file="build.properties" />
+
+	<!-- Default property values, if not overridden elsewhere: -->
+	<property name="build" location="build" />
+	<property name="classes.dir" location="${build}/classes" />
+	<property name="dist.dir" location="${build}/dist" />
+	<!--
+	<property name="app.version" value="1.0" />
+	-->
+	
+	<property name="app.name" value="crypto-util" />
+	<property name="dist-name" value="${app.name}-${app.version}" />
+	<tstamp>
+		<format property="build.time" pattern="yyyy-MM-dd HH:mm:ss" />
+	</tstamp>
+
+	<path id="compile.classpath">
+		<fileset dir="lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<!-- Simply extends the compile.classpath with your own compiled classes. -->
+	<path id="run.classpath">
+		<path refid="compile.classpath" />
+		<path location="${classes.dir}" />
+	</path>
+
+	<echo>
+    Application: ${app.name} ${app.version}
+    Build File : ${ant.file} 
+    Run Date   : ${build.time}
+    Run by     : ${user.name}
+    Build Dir  : ${build}
+    Base Dir   : ${basedir}
+    Java Home  : ${java.home}
+  </echo>
+
+	<echo message="Create build directory, and its subdirectories." />
+	<mkdir dir="${build}/dist" />
+	<mkdir dir="${classes.dir}" />
+
+	<!-- Now define the targets, which use the properties and datatypes defined above. -->
+
+	<target name="clean" description="Delete all build artifacts.">
+		<delete dir="${build}" />
+	</target>
+
+	<target name="init" description="Delete all build artifacts.">
+		<mkdir dir="${build}" />
+		<mkdir dir="${dist.dir}" />
+		<mkdir dir="${classes.dir}" />
+		<mkdir dir="${build}/dist" />
+	</target>
+
+
+
+	<target name="compile" description="Compile source files and place beside source.">
+		<javac srcdir="src" destdir="${classes.dir}">
+			<classpath refid="compile.classpath" />
+		</javac>
+		<!-- Here"s a simple way of debugging a path, fileset, or patternset, using its refid: -->
+		<echo>Classpath: ${toString:compile.classpath}</echo>
+	</target>
+
+
+	<target name="jar" description="Create a jar file for distribution." depends="compile">
+		<jar destfile="${build}/dist/${dist-name}.jar" duplicate="preserve">
+			<fileset dir="${classes.dir}" />
+			<!-- The static manifest.mf file is merged with additional dynamic items, specified here : -->
+			<manifest>
+				<attribute name="Specification-Version" value="${app.spec.version}" />
+				<attribute name="Specification-Title" value="${app.spec.name}" />
+				
+				<attribute name="Implementation-Version" value="${app.version}" />
+				<attribute name="Implementation-Title" value="${app.name}" />
+				
+			</manifest>
+		</jar>
+	</target>
+
+
+	<target name="all" description="Create all build artifacts." depends="clean, init, compile,  jar">
+		<echo>Finished creating all build artifacts.</echo>
+	</target>
+
+</project>

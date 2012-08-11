@@ -1,0 +1,5 @@
+keytool -keyalg AES -keysize 256 -genseckey -alias TheKey -storetype jceks -keystore keystore.jck -providerclass org.bouncycastle.jce.provider.BouncyCastleProvider -providerpath lib\bcprov-ext-jdk16-146.jar
+
+jarsigner -keystore keystore.jks  -signedjar crypto-util-1.0-signed.jar crypto-util-1.0.jar TheKey
+
+jarsigner -verify crypto-util-1.0-signed.jar
