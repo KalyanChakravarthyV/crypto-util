@@ -87,6 +87,11 @@
 				<attribute name="Implementation-Version" value="${app.version}" />
 				<attribute name="Implementation-Title" value="${app.name}" />
 				
+				<attribute name="Class-Path" value="${app.class-path}" />
+				<attribute name="Main-Class" value="${app.main-class}" />
+				
+				
+				
 			</manifest>
 		</jar>
 	</target>
