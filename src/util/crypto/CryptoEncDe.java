@@ -36,8 +36,8 @@ public class CryptoEncDe {
 	private static KeyStore keystore = null;
 	private static boolean intialized = false;
 
-	public CryptoEncDe(){
-		
+	public CryptoEncDe() {
+
 	}
 
 	private static final String LINE_SEPERATOR = System.getProperties().getProperty("line.separator");
@@ -77,9 +77,9 @@ public class CryptoEncDe {
 		return cipher.doFinal(plainText.getBytes());
 	}
 
-	public byte[] decrypt(String keyName, char[] keyPassword, byte[] encodedCipher)
-			throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, NoSuchProviderException,
-			NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	public byte[] decrypt(String keyName, char[] keyPassword, byte[] encodedCipher) throws UnrecoverableKeyException,
+			KeyStoreException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException,
+			InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		if (!intialized)
 			throw new IllegalStateException(
 					"Keystore not initialized, init(String, File, char[]) method not invoked yet");
@@ -88,7 +88,6 @@ public class CryptoEncDe {
 
 		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding", "BC");
 
-		System.out.println("\nStart decryption");
 		cipher.init(Cipher.DECRYPT_MODE, key);
 
 		return cipher.doFinal(encodedCipher);
@@ -104,7 +103,8 @@ public class CryptoEncDe {
 			System.err.println("No console defined!");
 			System.exit(1);
 		}
-		// java -cp bin;lib\bcprov-ext-jdk16-146.jar; util.crypto.CryptoEncDe -e keys.txt -keystore keystore.jck -key TheKey
+		// java -cp bin;lib\bcprov-ext-jdk16-146.jar; util.crypto.CryptoEncDe -e
+		// keys.txt -keystore keystore.jck -key TheKey
 		if (args.length < 6) {
 			System.out.println("Usage: java CryptoEncDe -{e|d} <file_name> -keystore <keystore_file> -k <keyname>");
 			System.out.println("When -e is used, STDIN is taken for plaintext and <file_name> has encrypted contents");
@@ -119,13 +119,9 @@ public class CryptoEncDe {
 
 		char[] storePasswordChar = "changeit".toCharArray();
 
-		// new char["changeit".length()]; "changeit".getChars(0,
-		// storePasswordChar.length, storePasswordChar, 0);
 
 		if ("-keystore".equals(args[2])) {
 			keyStoreFile = args[3];
-			// Load the keystore contents
-
 			storePasswordChar = console.readPassword("[%s]", "Enter key store password");
 		}
 
@@ -133,12 +129,8 @@ public class CryptoEncDe {
 			keyName = args[5];
 		}
 
-		char[] keyPasswordChar =
-
-		// PasswordField.getPassword(System.in,
-		// "Enter key password, [press Enter if it is the same as keystore password]");
-
-		console.readPassword("[%s]", "Enter key password, [press Enter if it is the same as keystore password]");
+		char[] keyPasswordChar = console.readPassword("[%s]",
+				"Enter key password, [press Enter if it is the same as keystore password]");
 
 		if (keyPasswordChar == null || keyPasswordChar.length == 0) {
 			keyPasswordChar = storePasswordChar;
@@ -157,22 +149,17 @@ public class CryptoEncDe {
 			inputBuffer.append(LINE_SEPERATOR);
 		}
 
-		/*
-		 * Scanner input = new Scanner(System.in); do{
-		 * inputBuffer.append(input.nextLine());
-		 * inputBuffer.append(LINE_SEPERATOR); }while (input.hasNext()) ;
-		 */
 		System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
 		System.out.print(inputBuffer);
 		System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
 		System.out.println();
 
 		byte[] encodedCipher = null;
-		System.out.println(new String(encodedCipher = Base64.encode(cryptoEncDe.encrypt(keyName, keyPasswordChar, inputBuffer.toString().trim())), "UTF-8"));
+		System.out.println(new String(encodedCipher = Base64.encode(cryptoEncDe.encrypt(keyName, keyPasswordChar,
+				inputBuffer.toString().trim())), "UTF-8"));
 
-		"Haritha is Great!".getBytes("UTF-8");
-
-		System.out.println(new String(cryptoEncDe.decrypt(keyName, keyPasswordChar,Base64.decode(encodedCipher)), "UTF-8"));
+		System.out.println(new String(cryptoEncDe.decrypt(keyName, keyPasswordChar, Base64.decode(encodedCipher)),
+				"UTF-8"));
 
 	}
 }
