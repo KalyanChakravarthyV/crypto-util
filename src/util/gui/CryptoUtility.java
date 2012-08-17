@@ -9,9 +9,11 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.util.Enumeration;
 
+import javax.crypto.Cipher;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -198,6 +200,7 @@ public class CryptoUtility extends JPanel {
 	public static void main(String[] args) {
 		// Schedule a job for the event-dispatching thread:
 		// creating and showing this application's GUI.
+
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				// Turn off metal's use of bold fonts
@@ -245,7 +248,6 @@ class CryptoActionListener implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent actionEvent) {
-		// TODO Auto-generated method stub
 
 		try {
 			cryptoEncDe.init(storeTypeList.getSelectedItem().toString(), new File(keyStoreFileField.getText()),
@@ -257,6 +259,13 @@ class CryptoActionListener implements ActionListener {
 
 			if (keyName == null)
 				throw new UnrecoverableKeyException("Please load the aliases/key names");
+
+			if (Cipher.getMaxAllowedKeyLength("AES") <= 128) {
+				throw new Exception(
+						"This applciation needs Unlimited Strength Jurisdiction Policy Files. \n"
+								+ "For more information please check for "
+								+ "\"Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files\" in the Java SE downloads section");
+			}
 
 			if (encrypt)
 				destinationText = new String(Base64.encode(cryptoEncDe.encrypt(keyName.toString(), keyPasswordField
@@ -274,8 +283,8 @@ class CryptoActionListener implements ActionListener {
 			 * "AES/ECB/PKCS5Padding" @
 			 * <code>util.crypto.CryptoEncDe.[encrypt|decrypt]</code>
 			 */
-			CryptoUtility.throwExceptionDialog((Component) actionEvent.getSource(), 
-					new Exception("Unknown Error Occurred"));
+			CryptoUtility.throwExceptionDialog((Component) actionEvent.getSource(), new Exception(
+					"Unknown Error Occurred"));
 			npe.printStackTrace();
 		} catch (Exception ex) {
 			CryptoUtility.throwExceptionDialog((Component) actionEvent.getSource(), ex);
