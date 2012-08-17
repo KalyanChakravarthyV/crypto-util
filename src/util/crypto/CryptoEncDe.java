@@ -51,13 +51,16 @@ public class CryptoEncDe {
 	 * @throws Exception
 	 */
 
-	public void init(String keyStoreType, File keyStoreFile, char[] storePassword) throws KeyStoreException,
+	public synchronized void init(String storeType, File keyStoreFile, char[] storePassword) throws KeyStoreException,
 			NoSuchAlgorithmException, CertificateException, IOException {
 
-		keystore = KeyStore.getInstance("jceks");
+		intialized = false;
+		keystore = KeyStore.getInstance(storeType);
+		//TODO Why should this be here?
 		Security.addProvider(new BouncyCastleProvider());
 		FileInputStream fileInputStream = new FileInputStream(keyStoreFile);
 		keystore.load(fileInputStream, storePassword);
+		
 		fileInputStream.close();
 		intialized = true;
 	}
@@ -115,7 +118,7 @@ public class CryptoEncDe {
 
 		String keyStoreFile = "";
 
-		String keyName = "theKey";
+		String keyName = "TheKey";
 
 		char[] storePasswordChar = "changeit".toCharArray();
 

@@ -1,17 +1,25 @@
 package util.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.security.UnrecoverableKeyException;
+import java.util.Enumeration;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
@@ -40,29 +48,34 @@ public class CryptoUtility extends JPanel {
 
 		JPanel filePanel = new JPanel();
 
-		JPanel keyStorePanel = new JPanel(new GridLayout(1, 8));
+		JPanel keyStorePanel = new JPanel(new GridLayout(3, 4, 26, 4));
 
 		keyStorePanel.add(new JLabel("Keystore Password"));
 
-		JPasswordField keystorePasswordField = new JPasswordField();
+		final JPasswordField keystorePasswordField = new JPasswordField(14);
 
 		keyStorePanel.add(keystorePasswordField);
 
 		keyStorePanel.add(new JLabel("Key Password"));
 
-		JPasswordField keyPasswordField = new JPasswordField();
+		JPasswordField keyPasswordField = new JPasswordField(14);
 		keyStorePanel.add(keyPasswordField);
 
-		keyStorePanel.add(new JLabel("Key Name"));
+		keyStorePanel.add(new JLabel("Key Name/Alias"));
 
-		final JTextField keyNameField = new JTextField();
+		final JComboBox keyNameField = new JComboBox();
 
 		keyStorePanel.add(keyNameField);
 
-		keyStorePanel.add(new JLabel("Keystore"));
+		keyStorePanel.add(new JLabel("Store Type"));
 
-		final JTextField keyStoreFileField = new JTextField();
+		final JComboBox storeTypeList = new JComboBox(java.security.Security.getAlgorithms("KeyStore").toArray());
 
+		keyStorePanel.add(storeTypeList);
+
+		keyStorePanel.add(new JLabel("Keystore File"));
+
+		final JTextField keyStoreFileField = new JTextField(14);
 		keyStorePanel.add(keyStoreFileField);
 
 		JButton chooseKeystoreButton = new JButton("Choose Keystore");
@@ -76,8 +89,46 @@ public class CryptoUtility extends JPanel {
 
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					File file = fc.getSelectedFile();
-					// This is where a real application would open the file.
+
+					if (!file.getAbsolutePath().equals(keyStoreFileField.getText()))
+						keyNameField.removeAllItems();
+
 					keyStoreFileField.setText(file.getAbsolutePath());
+
+				}
+
+			}
+		});
+
+		JButton loadAliasesButton = new JButton("Load Aliases");
+		keyStorePanel.add(loadAliasesButton);
+		loadAliasesButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+
+				try {
+					KeyStore keystore = KeyStore.getInstance(storeTypeList.getSelectedItem().toString());
+					FileInputStream fileInputStream = new FileInputStream(new File(keyStoreFileField.getText()));
+
+					keystore.load(fileInputStream, keystorePasswordField.getPassword());
+					fileInputStream.close();
+
+					DefaultComboBoxModel model = new DefaultComboBoxModel();
+
+					Enumeration<String> keyAliases = keystore.aliases();
+
+					while (keyAliases.hasMoreElements()) {
+						String keyAlias = (String) keyAliases.nextElement();
+						model.addElement(keyAlias);
+					}
+
+					keyNameField.setModel(model);
+
+				} catch (Exception ex) {
+					// TODO Auto-generated catch block
+					ex.printStackTrace();
+					CryptoUtility.throwExceptionDialog((Component) actionEvent.getSource(), ex);
 				}
 			}
 		});
@@ -107,13 +158,13 @@ public class CryptoUtility extends JPanel {
 
 		JButton encryptButton = new JButton("Encrypt");
 		buttonPanel.add(encryptButton);
-		encryptButton.addActionListener(new CryptoActionListener(keyStoreFileField, keystorePasswordField,
-				keyNameField, keyPasswordField, plainTextArea, encryptedTextArea, true));
+		encryptButton.addActionListener(new CryptoActionListener(keyStoreFileField, storeTypeList,
+				keystorePasswordField, keyNameField, keyPasswordField, plainTextArea, encryptedTextArea, true));
 
 		JButton decryptButton = new JButton("Decrypt");
 		buttonPanel.add(decryptButton);
-		decryptButton.addActionListener(new CryptoActionListener(keyStoreFileField, keystorePasswordField,
-				keyNameField, keyPasswordField, encryptedTextArea, plainTextArea, false));
+		decryptButton.addActionListener(new CryptoActionListener(keyStoreFileField, storeTypeList,
+				keystorePasswordField, keyNameField, keyPasswordField, encryptedTextArea, plainTextArea, false));
 
 		filePanel.add(keyStorePanel);
 		filePanel.add(cryptoPanel);
@@ -121,10 +172,9 @@ public class CryptoUtility extends JPanel {
 
 		panel.add(filePanel);
 
-		setPreferredSize(new Dimension(1200, 450));
+		setPreferredSize(new Dimension(1200, 550));
 		add(panel, BorderLayout.CENTER);
 
-		// cryptoEncDe.init("jceks", new File(keyStoreFile), storePasswordChar);
 	}
 
 	/**
@@ -136,7 +186,6 @@ public class CryptoUtility extends JPanel {
 		JFrame frame = new JFrame("Crypto Utility");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		// Create and set up the menu bar and content pane.
 		CryptoUtility demo = new CryptoUtility();
 		demo.setOpaque(true); // content panes must be opaque
 		frame.setContentPane(demo);
@@ -158,23 +207,30 @@ public class CryptoUtility extends JPanel {
 		});
 
 	}
+
+	public static void throwExceptionDialog(Component c, Exception e) {
+		JOptionPane.showMessageDialog(c.getParent(), e.getMessage(), e.getClass().getName(), JOptionPane.ERROR_MESSAGE);
+	}
 }
 
 class CryptoActionListener implements ActionListener {
 
+	private JComboBox storeTypeList;
 	private JTextField keyStoreFileField;
 	private JPasswordField keystorePasswordField;
-	private JTextField keyNameField;
+	private JComboBox keyNameField;
 	private JPasswordField keyPasswordField;
 	private CryptoEncDe cryptoEncDe;
 	private JTextArea sourceTextArea;
 	private JTextArea destinationTextArea;
 	boolean encrypt = true;
 
-	CryptoActionListener(JTextField keyStoreFileField, JPasswordField keystorePasswordField, JTextField keyNameField,
-			JPasswordField keyPasswordField, JTextArea sourceTextArea, JTextArea destinationTextArea, boolean encrypt) {
+	CryptoActionListener(JTextField keyStoreFileField, JComboBox storeTypeList, JPasswordField keystorePasswordField,
+			JComboBox keyNameField, JPasswordField keyPasswordField, JTextArea sourceTextArea,
+			JTextArea destinationTextArea, boolean encrypt) {
 
 		this.keyStoreFileField = keyStoreFileField;
+		this.storeTypeList = storeTypeList;
 
 		this.keystorePasswordField = keystorePasswordField;
 		this.keyNameField = keyNameField;
@@ -188,23 +244,41 @@ class CryptoActionListener implements ActionListener {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(ActionEvent actionEvent) {
 		// TODO Auto-generated method stub
 
 		try {
-			cryptoEncDe.init("jkes", new File(keyStoreFileField.getText()), keystorePasswordField.getPassword());
+			cryptoEncDe.init(storeTypeList.getSelectedItem().toString(), new File(keyStoreFileField.getText()),
+					keystorePasswordField.getPassword());
 
 			String destinationText = "";
+
+			Object keyName = keyNameField.getSelectedItem();
+
+			if (keyName == null)
+				throw new UnrecoverableKeyException("Please load the aliases/key names");
+
 			if (encrypt)
-				destinationText = new String(Base64.encode(cryptoEncDe.encrypt(keyNameField.getText(), keyPasswordField
+				destinationText = new String(Base64.encode(cryptoEncDe.encrypt(keyName.toString(), keyPasswordField
 						.getPassword(), sourceTextArea.getText())), "UTF-8");
 			else
-				destinationText = new String(cryptoEncDe.decrypt(keyNameField.getText(),
-						keyPasswordField.getPassword(), Base64.decode(sourceTextArea.getText())), "UTF-8");
+				destinationText = new String(cryptoEncDe.decrypt(keyName.toString(), keyPasswordField.getPassword(),
+						Base64.decode(sourceTextArea.getText())), "UTF-8");
 
 			destinationTextArea.setText(destinationText);
 
+		} catch (NullPointerException npe) {
+			/*
+			 * TODO This should not be happening this way, possible because of
+			 * the hard-coded Cipher instance transformation
+			 * "AES/ECB/PKCS5Padding" @
+			 * <code>util.crypto.CryptoEncDe.[encrypt|decrypt]</code>
+			 */
+			CryptoUtility.throwExceptionDialog((Component) actionEvent.getSource(), 
+					new Exception("Unknown Error Occurred"));
+			npe.printStackTrace();
 		} catch (Exception ex) {
+			CryptoUtility.throwExceptionDialog((Component) actionEvent.getSource(), ex);
 			ex.printStackTrace();
 		}
 
