@@ -19,7 +19,8 @@ bin/*
 *.dmg
 *.gz
 *.iso
-*.jar
+#jars under lib must be version controlled
+#*.jar
 *.rar
 *.tar
 *.zip

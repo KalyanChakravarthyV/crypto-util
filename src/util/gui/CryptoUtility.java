@@ -260,16 +260,23 @@ class CryptoActionListener implements ActionListener {
 			if (keyName == null)
 				throw new UnrecoverableKeyException("Please load the aliases/key names");
 
-			if (Cipher.getMaxAllowedKeyLength("AES") <= 128) {
-				throw new Exception(
-						"This applciation needs Unlimited Strength Jurisdiction Policy Files. \n"
-								+ "For more information please check for "
-								+ "\"Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files\" in the Java SE downloads section");
-			}
-
+			/*
+			 * TODO I don't think we should be restrict the user to use
+			 * Unlimited Strength Jurisdiction Policy Files, commenting the below check
+			 * 
+			 * 
+			 * if (Cipher.getMaxAllowedKeyLength("AES") <= 128) { throw new
+			 * Exception(
+			 * "This applciation needs Unlimited Strength Jurisdiction Policy Files. \n"
+			 * + "For more information please check for " +
+			 * "\"Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files\" in the Java SE downloads section"
+			 * ); }
+			 * 
+			 */
+			
 			if (encrypt)
-				destinationText = new String(Base64.encode(cryptoEncDe.encrypt(keyName.toString(), keyPasswordField
-						.getPassword(), sourceTextArea.getText())), "UTF-8");
+				destinationText = new String(Base64.encode(cryptoEncDe.encrypt(keyName.toString(),
+						keyPasswordField.getPassword(), sourceTextArea.getText())), "UTF-8");
 			else
 				destinationText = new String(cryptoEncDe.decrypt(keyName.toString(), keyPasswordField.getPassword(),
 						Base64.decode(sourceTextArea.getText())), "UTF-8");
